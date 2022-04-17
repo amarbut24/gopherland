@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/amarbut24/gopherland/auth"
-	"github.com/amarbut24/gopherland/users"
+	"github.com/amarbut24/gopherland/gopherusers"
 )
 
 var envvars = make(map[string]string)
@@ -23,7 +23,7 @@ func main() {
 		log.Fatalf("unable to create msgraph client with error: %v", err)
 	}
 
-	u, err := users.GetUserByID(client, "8e086b41-7bc0-4b4a-9c3e-0a7ff59d710b")
+	u, err := gopherusers.GetUserByID(client, "8e086b41-7bc0-4b4a-9c3e-0a7ff59d710b")
 	if err != nil {
 		log.Fatalf("unable to locate user: %v", err)
 	}
