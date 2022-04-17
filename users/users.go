@@ -1,4 +1,4 @@
-package users
+package gopherusers
 
 import (
 	"fmt"
@@ -6,6 +6,14 @@ import (
 	msgraphsdkgo "github.com/microsoftgraph/msgraph-sdk-go"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 )
+
+/*
+- Get All Azure Users
+- Get User by Email
+- Create User
+- Delete User
+- Disable User
+*/
 
 func GetUserByID(c *msgraphsdkgo.GraphServiceClient, uid string) (models.Userable, error) {
 	user, err := c.UsersById(uid).Get(nil)
@@ -15,6 +23,11 @@ func GetUserByID(c *msgraphsdkgo.GraphServiceClient, uid string) (models.Userabl
 	return user, nil
 }
 
-func GetAllUsers(c *msgraphsdkgo.GraphServiceClient) (models.Userable, error) {
-
-}
+// func GetAllUsers(c *msgraphsdkgo.GraphServiceClient) (models.Userable, error) {
+// 	user, err := c.Users().Get(nil)
+// 	if err != nil {
+// 		fmt.Printf("Error getting users: %v\n", err)
+// 		return err
+// 	}
+// 	user.GetNextLink()
+// }
