@@ -7,7 +7,7 @@ import (
 
 	msgraphsdk "github.com/microsoftgraph/msgraph-sdk-go"
 	models "github.com/microsoftgraph/msgraph-sdk-go/models"
-	"github.com/microsoftgraph/msgraph-sdk-go/users"
+	msgraph_errors "github.com/microsoftgraph/msgraph-sdk-go/models/odataerrors"
 )
 
 /*
@@ -29,7 +29,7 @@ type GopherUser struct {
 }
 
 func GetUserByID(c *msgraphsdk.GraphServiceClient, uid string) (models.Userable, error) {
-	user, err := c.UsersById(uid).Get(nil)
+	user, err := c.UsersById(uid).Get()
 	if err != nil {
 		return nil, fmt.Errorf("error finding user via objectid=%v: %v", uid, err)
 	}
@@ -47,7 +47,8 @@ func GetUserByID(c *msgraphsdk.GraphServiceClient, uid string) (models.Userable,
 
 func (user GopherUser) NewUser(c *msgraphsdk.GraphServiceClient) (models.Userable, error) {
 
-	password := NewRandomPassword(18)
+	//password := NewRandomPassword(18)
+	password := "pass1234"
 	requestBody := models.NewUser()
 	passProfile := models.NewPasswordProfile()
 	passProfile.SetForceChangePasswordNextSignIn(&user.ForceChangePasswordNextSignIn)
@@ -58,14 +59,12 @@ func (user GopherUser) NewUser(c *msgraphsdk.GraphServiceClient) (models.Userabl
 	requestBody.SetUserPrincipalName(&user.UserPrincipalName)
 	requestBody.SetMailNickname(&user.MailNickname)
 
-	options := &users.UsersRequestBuilderPostOptions{
-		Body: requestBody,
-	}
-	results, err := c.Users().Post(options)
+	results, err := c.Users().Post(requestBody)
 	if err != nil {
-		fmt.Printf("Error creating user: %v\n", err)
-		return nil, err
+		oderr := err.(*msgraph_errors.ODataError)
+		return nil, fmt.Errorf("error creating new user\nCode=%v\nmessage=%v", *oderr.GetError().GetCode(), *oderr.GetError().GetMessage())
 	}
+
 	fmt.Println("Created new user:", results)
 	return results, nil
 }

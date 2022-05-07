@@ -32,7 +32,11 @@ func main() {
 		DisplayName:                   "Anthony Marbut",
 		AccountEnabled:                false,
 	}
-	u1.NewUser(client)
+	u, err := u1.NewUser(client)
+	if err != nil {
+		log.Print(err)
+	}
+	fmt.Println(u)
 }
 
 func placeholder() {
@@ -54,7 +58,7 @@ func placeholder() {
 	}
 	fmt.Println(*u.GetUserPrincipalName())
 
-	users, err := client.Users().Get(nil)
+	users, err := client.Users().Get()
 	if err != nil {
 		fmt.Printf("Error getting users: %v\n", err)
 	}
