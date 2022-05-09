@@ -47,8 +47,7 @@ func GetUserByID(c *msgraphsdk.GraphServiceClient, uid string) (models.Userable,
 
 func (user GopherUser) NewUser(c *msgraphsdk.GraphServiceClient) (models.Userable, error) {
 
-	//password := NewRandomPassword(18)
-	password := "pass1234"
+	password := NewRandomPassword(18)
 	requestBody := models.NewUser()
 	passProfile := models.NewPasswordProfile()
 	passProfile.SetForceChangePasswordNextSignIn(&user.ForceChangePasswordNextSignIn)
@@ -61,11 +60,11 @@ func (user GopherUser) NewUser(c *msgraphsdk.GraphServiceClient) (models.Userabl
 
 	results, err := c.Users().Post(requestBody)
 	if err != nil {
-		oderr := err.(*msgraph_errors.ODataError)
-		return nil, fmt.Errorf("error creating new user\nCode=%v\nmessage=%v", *oderr.GetError().GetCode(), *oderr.GetError().GetMessage())
+		oderr := err.(*msgraph_errors.ODataError).GetError()
+		c := *oderr.GetCode()
+		m := *oderr.GetMessage()
+		return nil, fmt.Errorf("error creating new user\nCode=%v\nmessage=%v", c, m)
 	}
-
-	fmt.Println("Created new user:", results)
 	return results, nil
 }
 
