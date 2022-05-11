@@ -12,23 +12,23 @@ import (
 
 //AzureGraphClient uses default azure credentials
 //and returns a msgraph client
-func AzureGraphClient() (*msgraphsdk.GraphServiceClient, error) {
+func AzureGraphClient() (*msgraphsdk.GraphServiceClient, *msgraphsdk.GraphRequestAdapter, error) {
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
-		return nil, fmt.Errorf("authentication failure: %+v", err)
+		return nil, nil, fmt.Errorf("authentication failure: %+v", err)
 	}
 
 	auth, err := a.NewAzureIdentityAuthenticationProviderWithScopes(cred, nil)
 	if err != nil {
-		return nil, fmt.Errorf("error authentication provider: %v", err)
+		return nil, nil, fmt.Errorf("error authentication provider: %v", err)
 	}
 
 	adapter, err := msgraphsdk.NewGraphRequestAdapter(auth)
 	if err != nil {
-		return nil, fmt.Errorf("error creating adapter: %v", err)
+		return nil, nil, fmt.Errorf("error creating adapter: %v", err)
 	}
 	client := msgraphsdk.NewGraphServiceClient(adapter)
-	return client, nil
+	return client, adapter, nil
 }
 
 //SetAzureEnv sets env vars required to authenticate to Azure AD

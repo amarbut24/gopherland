@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/amarbut24/gopherland/auth"
+	"github.com/amarbut24/gopherland/gopherusers"
 )
 
 var envvars = make(map[string]string)
@@ -17,14 +18,15 @@ func main() {
 	auth.SetAzureEnv(envvars)
 
 	log.Printf("Creating msgraph client")
-	client, err := auth.AzureGraphClient()
+	client, adapter, err := auth.AzureGraphClient()
 	if err != nil {
 		log.Fatalf("unable to create msgraph client with error: %v", err)
 	}
 
-	users, err := client.Users().Get()
+	allUsers, err := gopherusers.GetAllUsers(client, adapter)
 	if err != nil {
-		fmt.Printf("Error getting users: %v\n", err)
+		log.Fatalf("unable to grab all users with error: %v", err)
 	}
-	fmt.Printf("%T", users.GetValue())
+	fmt.Printf("Found %v users", len(allUsers))
+
 }

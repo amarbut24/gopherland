@@ -6,6 +6,7 @@ import (
 	"time"
 
 	msgraphsdk "github.com/microsoftgraph/msgraph-sdk-go"
+	msgraphcore "github.com/microsoftgraph/msgraph-sdk-go-core"
 	models "github.com/microsoftgraph/msgraph-sdk-go/models"
 	msgraph_errors "github.com/microsoftgraph/msgraph-sdk-go/models/odataerrors"
 )
@@ -13,7 +14,6 @@ import (
 /*
 - Get All Azure Users
 - Get User by Email
-- Create User
 - Delete User
 - Disable User
 */
@@ -36,14 +36,32 @@ func GetUserByID(c *msgraphsdk.GraphServiceClient, uid string) (models.Userable,
 	return user, nil
 }
 
-// func GetAllUsers(c *msgraphsdkgo.GraphServiceClient) (models.Userable, error) {
-// 	user, err := c.Users().Get(nil)
-// 	if err != nil {
-// 		fmt.Printf("Error getting users: %v\n", err)
-// 		return err
-// 	}
-// 	user.GetNextLink()
-// }
+func GetAllUsers(c *msgraphsdk.GraphServiceClient, adapter *msgraphsdk.GraphRequestAdapter) ([]models.Userable, error) {
+	users, err := c.Users().Get()
+	if err != nil {
+		oderr := err.(*msgraph_errors.ODataError).GetError()
+		c := *oderr.GetCode()
+		m := *oderr.GetMessage()
+		return nil, fmt.Errorf("error creating new user\nCode=%v\nmessage=%v", c, m)
+	}
+
+	pageIterator, err := msgraphcore.NewPageIterator(users, adapter, models.CreateUserCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create new pageIterator: %v", err)
+	}
+
+	var allUsers []models.Userable
+	err = pageIterator.Iterate(func(pageItem interface{}) bool {
+		allUsers = append(allUsers, pageItem.(models.Userable))
+		// Return true to continue the iteration
+		return true
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error occured when iterating over pages: %v", err)
+	}
+
+	return allUsers, nil
+}
 
 func (user GopherUser) NewUser(c *msgraphsdk.GraphServiceClient) (models.Userable, error) {
 
