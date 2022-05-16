@@ -143,7 +143,7 @@ func NewRandomASCII() string {
 	i := 0
 	for {
 		i = rand.Intn(126-33) + 33
-		// < > are not allowed password characters
+		// we can't use '<' , '>', '"' for password characters
 		if i != 62 && i != 60 && i != 34 {
 			break
 		}
