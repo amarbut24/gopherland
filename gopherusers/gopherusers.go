@@ -9,14 +9,8 @@ import (
 	msgraphcore "github.com/microsoftgraph/msgraph-sdk-go-core"
 	models "github.com/microsoftgraph/msgraph-sdk-go/models"
 	msgraph_errors "github.com/microsoftgraph/msgraph-sdk-go/models/odataerrors"
+	users "github.com/microsoftgraph/msgraph-sdk-go/users"
 )
-
-/*
-- Get All Azure Users
-- Get User by Email
-- Delete User
-- Disable User
-*/
 
 type GopherUser struct {
 	AccountEnabled                bool
@@ -31,9 +25,52 @@ type GopherUser struct {
 func GetUserByID(c *msgraphsdk.GraphServiceClient, uid string) (models.Userable, error) {
 	user, err := c.UsersById(uid).Get()
 	if err != nil {
-		return nil, fmt.Errorf("error finding user via objectid=%v: %v", uid, err)
+		oderr := err.(*msgraph_errors.ODataError).GetError()
+		c := *oderr.GetCode()
+		m := *oderr.GetMessage()
+		return nil, fmt.Errorf("error finding user via objectid\nCode=%v\nmessage=%v", c, m)
 	}
 	return user, nil
+}
+
+func GetUserByUPN(c *msgraphsdk.GraphServiceClient, upn string) (models.Userable, error) {
+	filter := fmt.Sprintf("userPrincipalName eq '%s'", upn)
+	requestParameters := &users.UsersRequestBuilderGetQueryParameters{
+		Filter: &filter,
+	}
+
+	options := &users.UsersRequestBuilderGetRequestConfiguration{
+		QueryParameters: requestParameters,
+	}
+
+	user, err := c.Users().GetWithRequestConfigurationAndResponseHandler(options, nil)
+	if err != nil {
+		oderr := err.(*msgraph_errors.ODataError).GetError()
+		c := *oderr.GetCode()
+		m := *oderr.GetMessage()
+		return nil, fmt.Errorf("error finding user via UserPrincipalName=%v\nCode=%v\nmessage=%v", upn, c, m)
+	}
+	if len(user.GetValue()) > 0 {
+		if len(user.GetValue()) > 1 {
+			return nil, fmt.Errorf("more than one value was returned when matching userPrincipalName %v, this should not happen", upn)
+		}
+
+		return user.GetValue()[0], nil
+	} else {
+		return nil, nil
+	}
+
+}
+
+func DeleteUserByID(c *msgraphsdk.GraphServiceClient, uid string) error {
+	err := c.UsersById(uid).Delete()
+	if err != nil {
+		oderr := err.(*msgraph_errors.ODataError).GetError()
+		c := *oderr.GetCode()
+		m := *oderr.GetMessage()
+		return fmt.Errorf("error finding user via objectid\nCode=%v\nmessage=%v", c, m)
+	}
+	return nil
 }
 
 func GetAllUsers(c *msgraphsdk.GraphServiceClient, adapter *msgraphsdk.GraphRequestAdapter) ([]models.Userable, error) {
@@ -65,6 +102,12 @@ func GetAllUsers(c *msgraphsdk.GraphServiceClient, adapter *msgraphsdk.GraphRequ
 
 func (user GopherUser) NewUser(c *msgraphsdk.GraphServiceClient) (models.Userable, error) {
 
+	foundUser, _ := GetUserByUPN(c, user.UserPrincipalName)
+	if foundUser != nil {
+		fmt.Printf("found user %v, skipping creation\n", user.UserPrincipalName)
+		return nil, nil
+	}
+
 	password := NewRandomPassword(18)
 	requestBody := models.NewUser()
 	passProfile := models.NewPasswordProfile()
@@ -76,28 +119,34 @@ func (user GopherUser) NewUser(c *msgraphsdk.GraphServiceClient) (models.Userabl
 	requestBody.SetUserPrincipalName(&user.UserPrincipalName)
 	requestBody.SetMailNickname(&user.MailNickname)
 
-	results, err := c.Users().Post(requestBody)
+	newUser, err := c.Users().Post(requestBody)
 	if err != nil {
 		oderr := err.(*msgraph_errors.ODataError).GetError()
 		c := *oderr.GetCode()
 		m := *oderr.GetMessage()
 		return nil, fmt.Errorf("error creating new user\nCode=%v\nmessage=%v", c, m)
 	}
-	return results, nil
+	return newUser, nil
 }
 
-//NewRandomPassword is used to generate a temporary password
 func NewRandomPassword(length int) string {
 	var password string
 
 	for i := 0; i != length; i++ {
-		password += newRandomASCII()
+		password += NewRandomASCII()
 	}
 	return password
 }
 
-func newRandomASCII() string {
+func NewRandomASCII() string {
 	rand.Seed(time.Now().UTC().UnixNano())
-	i := rand.Intn(126-33) + 33
-	return string(i)
+	i := 0
+	for {
+		i = rand.Intn(126-33) + 33
+		// < > are not allowed password characters
+		if i != 62 && i != 60 && i != 34 {
+			break
+		}
+	}
+	return fmt.Sprintf("%c", i)
 }
