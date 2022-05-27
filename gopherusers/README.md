@@ -26,11 +26,11 @@ if err != nil {
 # Get user by Object ID
 
 ```
-byId, err := gopherusers.GetUserByID(client, *newUser.GetId())
+byID, err := gopherusers.GetUserByID(client, *newUser.GetId())
 if err != nil {
 	log.Fatalf("unable to locate user: %v", err)
 }
-log.Println("found user based on Id =", *byId.GetId())
+log.Println("found user based on Id =", *byID.GetId())
 
 ```
 
