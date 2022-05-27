@@ -1,0 +1,37 @@
+name: Baseline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+
+  baseline:
+    runs-on: ubuntu-20.04
+    
+    env:
+      AZURE_TENANT_ID: "02e9f3a0-53a5-4898-bb6e-e97008b17be7"
+      AZURE_CLIENT_ID: "98b51714-780b-41ab-b0a9-aaa8833b6be2"
+      AZURE_CLIENT_SECRET:  ${{ secrets.AZURE_CLIENT_SECRET}}
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version-file: 'go.mod'
+
+    - name: Verify dependencies
+      run: go mod verify
+
+    - name: Install golint
+      run: go install golang.org/x/lint/golint@latest
+
+    - name: Run golint
+      run: golint ./...
+
+    - name: Run tests
+      run: go test -race -vet=off ./...

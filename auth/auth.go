@@ -43,9 +43,8 @@ func SetAzureEnv(env map[string]string) error {
 		ev := os.Getenv(k)
 		if ev != v {
 			return fmt.Errorf("was unable to locate env var for key=%v", k)
-		} else {
-			log.Printf("env var for key=%v was succesfully set to value=%v", k, ev)
 		}
+		log.Printf("env var for key=%v was succesfully set to value=%v", k, ev)
 	}
 	return nil
 }
