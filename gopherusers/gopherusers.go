@@ -12,6 +12,7 @@ import (
 	users "github.com/microsoftgraph/msgraph-sdk-go/users"
 )
 
+// GopherUser can be used to intilzae a new user
 type GopherUser struct {
 	AccountEnabled                bool
 	FirstName                     string
@@ -22,6 +23,7 @@ type GopherUser struct {
 	MailNickname                  string
 }
 
+// GetUserByID can used to return an Azure AD user via ObjectID
 func GetUserByID(c *msgraphsdk.GraphServiceClient, uid string) (models.Userable, error) {
 	user, err := c.UsersById(uid).Get()
 	if err != nil {
@@ -33,6 +35,7 @@ func GetUserByID(c *msgraphsdk.GraphServiceClient, uid string) (models.Userable,
 	return user, nil
 }
 
+// GetUserByUPN can used to return an Azure AD user via UPN
 func GetUserByUPN(c *msgraphsdk.GraphServiceClient, upn string) (models.Userable, error) {
 	filter := fmt.Sprintf("userPrincipalName eq '%s'", upn)
 	requestParameters := &users.UsersRequestBuilderGetQueryParameters{
@@ -56,12 +59,12 @@ func GetUserByUPN(c *msgraphsdk.GraphServiceClient, upn string) (models.Userable
 		}
 
 		return user.GetValue()[0], nil
-	} else {
-		return nil, nil
 	}
+	return nil, nil
 
 }
 
+// DeleteUserByID can used to delete an Azure AD user using Object ID
 func DeleteUserByID(c *msgraphsdk.GraphServiceClient, uid string) error {
 	err := c.UsersById(uid).Delete()
 	if err != nil {
@@ -73,6 +76,7 @@ func DeleteUserByID(c *msgraphsdk.GraphServiceClient, uid string) error {
 	return nil
 }
 
+// GetAllUsers returns all Azure AD users
 func GetAllUsers(c *msgraphsdk.GraphServiceClient, adapter *msgraphsdk.GraphRequestAdapter) ([]models.Userable, error) {
 	users, err := c.Users().Get()
 	if err != nil {
@@ -100,6 +104,7 @@ func GetAllUsers(c *msgraphsdk.GraphServiceClient, adapter *msgraphsdk.GraphRequ
 	return allUsers, nil
 }
 
+// NewUser allows you to create a new Azure AD user
 func (user GopherUser) NewUser(c *msgraphsdk.GraphServiceClient) (models.Userable, error) {
 
 	foundUser, _ := GetUserByUPN(c, user.UserPrincipalName)
@@ -108,7 +113,7 @@ func (user GopherUser) NewUser(c *msgraphsdk.GraphServiceClient) (models.Userabl
 		return nil, nil
 	}
 
-	password := NewRandomPassword(18)
+	password := newRandomPassword(18)
 	requestBody := models.NewUser()
 	passProfile := models.NewPasswordProfile()
 	passProfile.SetForceChangePasswordNextSignIn(&user.ForceChangePasswordNextSignIn)
@@ -129,21 +134,22 @@ func (user GopherUser) NewUser(c *msgraphsdk.GraphServiceClient) (models.Userabl
 	return newUser, nil
 }
 
-func NewRandomPassword(length int) string {
+func newRandomPassword(length int) string {
 	var password string
 
 	for i := 0; i != length; i++ {
-		password += NewRandomASCII()
+		password += newRandomASCII()
 	}
 	return password
 }
 
-func NewRandomASCII() string {
+func newRandomASCII() string {
 	rand.Seed(time.Now().UTC().UnixNano())
 	i := 0
 	for {
 		i = rand.Intn(126-33) + 33
 		// we can't use '<' , '>', '"' as characters in a password
+
 		if i != 62 && i != 60 && i != 34 {
 			break
 		}
