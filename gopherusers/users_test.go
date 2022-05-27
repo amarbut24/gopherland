@@ -8,14 +8,15 @@ import (
 
 var envvars = make(map[string]string)
 
-// used for local testing. Go tests ran via Github Workflows will use
-// <insert workflow block example>
+//Uncomment below block if you need to run test locally
+/*
 func init() {
 	envvars["AZURE_TENANT_ID"] = "02e9f3a0-53a5-4898-bb6e-e97008b17be7"
 	envvars["AZURE_CLIENT_ID"] = "98b51714-780b-41ab-b0a9-aaa8833b6be2"
 	envvars["AZURE_CLIENT_CERTIFICATE_PATH"] = "/home/anthony/selfsigned.crt"
 	auth.SetAzureEnv(envvars)
 }
+*/
 
 func TestClient(t *testing.T) {
 	_, _, err := auth.AzureGraphClient()
