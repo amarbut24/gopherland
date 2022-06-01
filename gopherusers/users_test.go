@@ -72,7 +72,7 @@ func TestGetUserByUPN(t *testing.T) {
 	if err != nil {
 		t.Errorf("unable to locate user: %v", err)
 	}
-	t.Logf("found user based on Id = %v", *byUPN.GetId())
+	t.Logf("found user based on UPN = %v", *byUPN.GetUserPrincipalName())
 }
 
 func TestDeleteUserByID(t *testing.T) {
@@ -86,4 +86,17 @@ func TestDeleteUserByID(t *testing.T) {
 		t.Errorf("unable to locate user: %v", err)
 	}
 	t.Logf("user %v was deleted\n", *testUser.GetDisplayName())
+}
+
+func TestGetAllUsers(t *testing.T) {
+	client, adapter, err := auth.AzureGraphClient()
+	if err != nil {
+		t.Errorf("unable to authenticate to azure ad %v", err)
+	}
+
+	allUsers, err := GetAllUsers(client, adapter)
+	if err != nil {
+		t.Errorf("unable to grab all users with error: %v", err)
+	}
+	t.Logf("Found %v users", len(allUsers))
 }
