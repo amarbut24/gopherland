@@ -12,6 +12,7 @@ import (
 
 //AzureGraphClient uses default azure credentials
 //and returns a msgraph client
+//More can be read here -> https://github.com/Azure/azure-sdk-for-go/wiki/Set-up-Your-Environment-for-Authentication#configure-defaultazurecredential
 func AzureGraphClient() (*msgraphsdk.GraphServiceClient, *msgraphsdk.GraphRequestAdapter, error) {
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
