@@ -8,7 +8,6 @@ import (
 )
 
 //Uncomment below block if you need to run test locally
-/*
 func init() {
 	envvars := make(map[string]string)
 	envvars["AZURE_TENANT_ID"] = "02e9f3a0-53a5-4898-bb6e-e97008b17be7"
@@ -16,7 +15,6 @@ func init() {
 	envvars["AZURE_CLIENT_CERTIFICATE_PATH"] = "/home/anthony/selfsigned.crt"
 	auth.SetAzureEnv(envvars)
 }
-*/
 
 //testUser will be populated vai TestNewUser
 //and will be used throughout the remaining tests
@@ -86,4 +84,17 @@ func TestDeleteUserByID(t *testing.T) {
 		t.Errorf("unable to locate user: %v", err)
 	}
 	t.Logf("user %v was deleted\n", *testUser.GetDisplayName())
+}
+
+func TestGetAllUsers(t *testing.T) {
+	client, adapter, err := auth.AzureGraphClient()
+	if err != nil {
+		t.Errorf("unable to authenticate to azure ad %v", err)
+	}
+
+	allUsers, err := GetAllUsers(client, adapter)
+	if err != nil {
+		t.Errorf("unable to grab all users with error: %v", err)
+	}
+	t.Logf("Found %v users", len(allUsers))
 }
