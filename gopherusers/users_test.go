@@ -72,7 +72,7 @@ func TestGetUserByUPN(t *testing.T) {
 	if err != nil {
 		t.Errorf("unable to locate user: %v", err)
 	}
-	t.Logf("found user based on Id = %v", *byUPN.GetId())
+	t.Logf("found user based on UPN = %v", *byUPN.GetUserPrincipalName())
 }
 
 func TestDeleteUserByID(t *testing.T) {
