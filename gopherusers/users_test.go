@@ -61,3 +61,16 @@ func TestGetUserByID(t *testing.T) {
 	}
 	t.Logf("found user based on Id = %v", *byID.GetId())
 }
+
+func TestGetUserByUPN(t *testing.T) {
+	client, _, err := auth.AzureGraphClient()
+	if err != nil {
+		t.Errorf("unable to authenticate to azure ad %v", err)
+	}
+
+	byUPN, err := GetUserByID(client, *testUser.GetUserPrincipalName())
+	if err != nil {
+		t.Errorf("unable to locate user: %v", err)
+	}
+	t.Logf("found user based on Id = %v", *byUPN.GetId())
+}
