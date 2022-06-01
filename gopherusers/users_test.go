@@ -8,6 +8,7 @@ import (
 )
 
 //Uncomment below block if you need to run test locally
+/*
 func init() {
 	envvars := make(map[string]string)
 	envvars["AZURE_TENANT_ID"] = "02e9f3a0-53a5-4898-bb6e-e97008b17be7"
@@ -15,6 +16,7 @@ func init() {
 	envvars["AZURE_CLIENT_CERTIFICATE_PATH"] = "/home/anthony/selfsigned.crt"
 	auth.SetAzureEnv(envvars)
 }
+*/
 
 //testUser will be populated vai TestNewUser
 //and will be used throughout the remaining tests
