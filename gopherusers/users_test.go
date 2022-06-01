@@ -74,3 +74,16 @@ func TestGetUserByUPN(t *testing.T) {
 	}
 	t.Logf("found user based on Id = %v", *byUPN.GetId())
 }
+
+func TestDeleteUserByID(t *testing.T) {
+	client, _, err := auth.AzureGraphClient()
+	if err != nil {
+		t.Errorf("unable to authenticate to azure ad %v", err)
+	}
+
+	err = DeleteUserByID(client, *testUser.GetId())
+	if err != nil {
+		t.Errorf("unable to locate user: %v", err)
+	}
+	t.Logf("user %v was deleted\n", *testUser.GetDisplayName())
+}
