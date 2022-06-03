@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/amarbut24/gopherland/gophererrors"
 	msgraphsdk "github.com/microsoftgraph/msgraph-sdk-go"
 	msgraphcore "github.com/microsoftgraph/msgraph-sdk-go-core"
 	models "github.com/microsoftgraph/msgraph-sdk-go/models"
@@ -27,10 +28,8 @@ type GopherUser struct {
 func GetUserByID(c *msgraphsdk.GraphServiceClient, uid string) (models.Userable, error) {
 	user, err := c.UsersById(uid).Get()
 	if err != nil {
-		oderr := err.(*msgraph_errors.ODataError).GetError()
-		c := *oderr.GetCode()
-		m := *oderr.GetMessage()
-		return nil, fmt.Errorf("error finding user via objectid\nCode=%v\nmessage=%v", c, m)
+		odataerr := gophererrors.HandleODataErr(err, "error finding user via objectid")
+		return nil, odataerr
 	}
 	return user, nil
 }
@@ -126,10 +125,8 @@ func (user GopherUser) NewUser(c *msgraphsdk.GraphServiceClient) (models.Userabl
 
 	newUser, err := c.Users().Post(requestBody)
 	if err != nil {
-		oderr := err.(*msgraph_errors.ODataError).GetError()
-		c := *oderr.GetCode()
-		m := *oderr.GetMessage()
-		return nil, fmt.Errorf("error creating new user\nCode=%v\nmessage=%v", c, m)
+		odataerr := gophererrors.HandleODataErr(err, "error creating new user")
+		return nil, odataerr
 	}
 	return newUser, nil
 }
