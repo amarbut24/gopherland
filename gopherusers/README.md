@@ -1,4 +1,4 @@
-# users
+# Azure AD Users Package
 
 # Create new user
 ```
@@ -36,7 +36,7 @@ log.Println("found user based on Id =", *byID.GetId())
 
 # Get user by UserPrincipalName
 
-```
+```go
 byUPN, err := gopherusers.GetUserByUPN(client, *newUser.GetUserPrincipalName())
 if err != nil {
 	log.Fatalf("unable to locate user: %v", err)
@@ -47,7 +47,7 @@ log.Println("found user based on UPN =", *byUPN.GetUserPrincipalName())
 
 # Get all users will return []models.Userable
 
-```
+```go
 allUsers, err := gopherusers.GetAllUsers(client, adapter)
 if err != nil {
 	log.Fatalf("unable to grab all users with error: %v", err)
@@ -58,7 +58,7 @@ fmt.Printf("Found %v users", len(allUsers))
 
 # Delete user by object id
 
-```
+```go
 
 err = gopherusers.DeleteUserByID(client, *byUPN.GetId())
 if err != nil {
@@ -71,7 +71,7 @@ if err != nil {
 
 # Example - Create, query, enable, and delet a new user
 
-```
+```go
 package main
 
 import (
