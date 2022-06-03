@@ -112,7 +112,7 @@ func (user GopherUser) NewUser(c *msgraphsdk.GraphServiceClient) (models.Userabl
 		return nil, nil
 	}
 
-	password := newRandomPassword(18)
+	password := newRandomPassword(2)
 	requestBody := models.NewUser()
 	passProfile := models.NewPasswordProfile()
 	passProfile.SetForceChangePasswordNextSignIn(&user.ForceChangePasswordNextSignIn)
