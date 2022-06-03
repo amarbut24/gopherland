@@ -40,7 +40,7 @@ func TestNewUser(t *testing.T) {
 
 	newUser, err := u1.NewUser(client)
 	if err != nil {
-		t.Errorf("got err %v, wanted no errors", err)
+		t.Fatalf("got err %v, wanted no errors", err)
 	} else if newUser == nil {
 		t.Logf("existing user %v was found when attempting to create new user", u1.UserPrincipalName)
 	} else {
