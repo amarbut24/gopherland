@@ -4,7 +4,7 @@ Goal of this repo is to take the Azure GO SDK's created by Microsoft and create 
 
 ----------------------------------------------------
 ### Azure AD Auth
-The [auth](./auth/auth.go) package exposes functions that help you authenticate with Azure AD\
+The [auth](./auth/auth.go) package exposes functions that help you authenticate to Azure AD\
 [README](./auth/README.md)
 
 ### Azure AD Users
