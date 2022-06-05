@@ -1,6 +1,6 @@
 # gopherland
 
-Goal of this repo is to take the Go Azure SDK's created by Microsoft and create easy to consume packages.
+Goal of this repo is to take the Azure GO SDK's created by Microsoft and create easy to consume packages.
 
 ----------------------------------------------------
 ### Azure AD Auth
