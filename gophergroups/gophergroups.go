@@ -120,16 +120,15 @@ func GetAllGroups(c *msgraphsdk.GraphServiceClient, adapter *msgraphsdk.GraphReq
 	return allGroups, nil
 }
 
-func (group returnedGroup) AddMembers(c *msgraphsdk.GraphServiceClient, memberids []string) {
-	requestBody := models.NewGroupSetting()
+// func (group returnedGroup) AddMembers(c *msgraphsdk.GraphServiceClient, memberids []string) {
+// 	requestBody := models.NewGroupSetting()
 
-	var idMap map[string]interface{}
-	for id := range memberids {
-		idMap["@odata.id"] = "https://graph.microsoft.com/v1.0/directoryObjects/" + string(id)
-	}
+// 	var idMap map[string]interface{}
+// 	for id := range memberids {
+// 		idMap["@odata.id"] = "https://graph.microsoft.com/v1.0/directoryObjects/" + string(id)
+// 	}
 
-	requestBody.SetAdditionalData(idMap)
-	//groupId := group.GetId()
-	builder := c.GroupsById("asdfasdfasd").Members()
-	builder.members.Ref()
-}
+// 	requestBody.SetAdditionalData(idMap)
+// 	//groupId := group.GetId()
+// 	builder := c.GroupsById("asdfasdfasd").Members().
+// }
