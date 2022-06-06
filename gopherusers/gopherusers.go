@@ -64,7 +64,7 @@ func GetUserByUPN(c *msgraphsdk.GraphServiceClient, upn string) (models.Userable
 func DeleteUserByID(c *msgraphsdk.GraphServiceClient, uid string) error {
 	err := c.UsersById(uid).Delete()
 	if err != nil {
-		odataerr := gophererrors.HandleODataErr(err, "error finding user via objectid")
+		odataerr := gophererrors.HandleODataErr(err, "error deleting user via objectid")
 		return odataerr
 	}
 	return nil
