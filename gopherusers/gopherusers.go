@@ -9,7 +9,6 @@ import (
 	msgraphsdk "github.com/microsoftgraph/msgraph-sdk-go"
 	msgraphcore "github.com/microsoftgraph/msgraph-sdk-go-core"
 	models "github.com/microsoftgraph/msgraph-sdk-go/models"
-	msgraph_errors "github.com/microsoftgraph/msgraph-sdk-go/models/odataerrors"
 	users "github.com/microsoftgraph/msgraph-sdk-go/users"
 )
 
@@ -47,10 +46,8 @@ func GetUserByUPN(c *msgraphsdk.GraphServiceClient, upn string) (models.Userable
 
 	user, err := c.Users().GetWithRequestConfigurationAndResponseHandler(options, nil)
 	if err != nil {
-		oderr := err.(*msgraph_errors.ODataError).GetError()
-		c := *oderr.GetCode()
-		m := *oderr.GetMessage()
-		return nil, fmt.Errorf("error finding user via UserPrincipalName=%v\nCode=%v\nmessage=%v", upn, c, m)
+		odataerr := gophererrors.HandleODataErr(err, "error finding user via UserPrincipalName")
+		return nil, odataerr
 	}
 	if len(user.GetValue()) > 0 {
 		if len(user.GetValue()) > 1 {
@@ -67,10 +64,8 @@ func GetUserByUPN(c *msgraphsdk.GraphServiceClient, upn string) (models.Userable
 func DeleteUserByID(c *msgraphsdk.GraphServiceClient, uid string) error {
 	err := c.UsersById(uid).Delete()
 	if err != nil {
-		oderr := err.(*msgraph_errors.ODataError).GetError()
-		c := *oderr.GetCode()
-		m := *oderr.GetMessage()
-		return fmt.Errorf("error finding user via objectid\nCode=%v\nmessage=%v", c, m)
+		odataerr := gophererrors.HandleODataErr(err, "error deleting user via objectid")
+		return odataerr
 	}
 	return nil
 }
@@ -79,10 +74,8 @@ func DeleteUserByID(c *msgraphsdk.GraphServiceClient, uid string) error {
 func GetAllUsers(c *msgraphsdk.GraphServiceClient, adapter *msgraphsdk.GraphRequestAdapter) ([]models.Userable, error) {
 	users, err := c.Users().Get()
 	if err != nil {
-		oderr := err.(*msgraph_errors.ODataError).GetError()
-		c := *oderr.GetCode()
-		m := *oderr.GetMessage()
-		return nil, fmt.Errorf("error creating new user\nCode=%v\nmessage=%v", c, m)
+		odataerr := gophererrors.HandleODataErr(err, "error retrieving all users")
+		return nil, odataerr
 	}
 
 	pageIterator, err := msgraphcore.NewPageIterator(users, adapter, models.CreateUserCollectionResponseFromDiscriminatorValue)
