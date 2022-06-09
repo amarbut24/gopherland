@@ -7,6 +7,7 @@ import (
 	msgraphsdk "github.com/microsoftgraph/msgraph-sdk-go"
 	msgraphcore "github.com/microsoftgraph/msgraph-sdk-go-core"
 	groups "github.com/microsoftgraph/msgraph-sdk-go/groups"
+	membersAdd "github.com/microsoftgraph/msgraph-sdk-go/groups/item/members/ref"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 )
 
@@ -15,19 +16,16 @@ type GopherGroup struct {
 	Description     string
 	MailEnabled     bool
 	MailNickname    string
+	ObjectID        string
 	SecurityEnabled bool
 	GroupTypes      []string
-}
-
-type returnedGroup struct {
-	models.Groupable
 }
 
 // NewGroup allows you to create a new Azure AD group
 func (group GopherGroup) NewGroup(c *msgraphsdk.GraphServiceClient) (models.Groupable, error) {
 
 	foundGroup, _ := GetGroupByDisplayName(c, group.DisplayName)
-	if foundGroup != nil {
+	if foundGroup.DisplayName != "" {
 		fmt.Printf("found user %v, skipping creation\n", group.DisplayName)
 		return nil, nil
 	}
@@ -59,7 +57,7 @@ func GetGroupByID(c *msgraphsdk.GraphServiceClient, uid string) (models.Groupabl
 }
 
 // GetGroupByDisplayName can used to return an Azure AD group via DisplayName
-func GetGroupByDisplayName(c *msgraphsdk.GraphServiceClient, displayname string) (models.Groupable, error) {
+func GetGroupByDisplayName(c *msgraphsdk.GraphServiceClient, displayname string) (GopherGroup, error) {
 	filter := fmt.Sprintf("displayName eq '%s'", displayname)
 	requestParameters := &groups.GroupsRequestBuilderGetQueryParameters{
 		Filter: &filter,
@@ -72,15 +70,15 @@ func GetGroupByDisplayName(c *msgraphsdk.GraphServiceClient, displayname string)
 	group, err := c.Groups().GetWithRequestConfigurationAndResponseHandler(options, nil)
 	if err != nil {
 		odataerr := gophererrors.HandleODataErr(err, "error finding group via displayName")
-		return nil, odataerr
+		return GopherGroup{}, odataerr
 	}
 	if len(group.GetValue()) > 0 {
 		if len(group.GetValue()) > 1 {
 			return nil, fmt.Errorf("more than one value was returned when matching displayName %v, cleanup duplicate groups", displayname)
 		}
-		return group.GetValue()[0], nil
+		return ConvertToGopherGroup(group.GetValue()[0]), nil
 	}
-	return nil, nil
+	return GopherGroup{}, nil
 
 }
 
@@ -120,15 +118,23 @@ func GetAllGroups(c *msgraphsdk.GraphServiceClient, adapter *msgraphsdk.GraphReq
 	return allGroups, nil
 }
 
-// func (group returnedGroup) AddMembers(c *msgraphsdk.GraphServiceClient, memberids []string) {
-// 	requestBody := models.NewGroupSetting()
+func ConvertToGopherGroup(g models.Groupable) GopherGroup {
+	return GopherGroup{
+		DisplayName:     *g.GetDisplayName(),
+		Description:     *g.GetDescription(),
+		MailEnabled:     *g.GetMailEnabled(),
+		MailNickname:    *g.GetMailNickname(),
+		ObjectID:        *g.GetId(),
+		SecurityEnabled: *g.GetSecurityEnabled(),
+		GroupTypes:      g.GetGroupTypes(),
+	}
+}
 
-// 	var idMap map[string]interface{}
-// 	for id := range memberids {
-// 		idMap["@odata.id"] = "https://graph.microsoft.com/v1.0/directoryObjects/" + string(id)
-// 	}
+func (group returnedGroup) AddMembers(c *msgraphsdk.GraphServiceClient, memberids []string) {
+	reference := membersAdd.NewRef()
+	for id := range memberids {
+		reference.GetAdditionalData()["@odata.id"] = "https://graph.microsoft.com/v1.0/directoryObjects/" + string(id)
+	}
 
-// 	requestBody.SetAdditionalData(idMap)
-// 	//groupId := group.GetId()
-// 	builder := c.GroupsById("asdfasdfasd").Members().
-// }
+	graphClient.GroupsById(&group).Members().Post(reference)
+}
