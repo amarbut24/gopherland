@@ -7,7 +7,6 @@ import (
 	msgraphsdk "github.com/microsoftgraph/msgraph-sdk-go"
 	msgraphcore "github.com/microsoftgraph/msgraph-sdk-go-core"
 	groups "github.com/microsoftgraph/msgraph-sdk-go/groups"
-	membersAdd "github.com/microsoftgraph/msgraph-sdk-go/groups/item/members/ref"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 )
 
@@ -74,7 +73,7 @@ func GetGroupByDisplayName(c *msgraphsdk.GraphServiceClient, displayname string)
 	}
 	if len(group.GetValue()) > 0 {
 		if len(group.GetValue()) > 1 {
-			return nil, fmt.Errorf("more than one value was returned when matching displayName %v, cleanup duplicate groups", displayname)
+			return GopherGroup{}, fmt.Errorf("more than one value was returned when matching displayName %v, cleanup duplicate groups", displayname)
 		}
 		return ConvertToGopherGroup(group.GetValue()[0]), nil
 	}
@@ -130,11 +129,29 @@ func ConvertToGopherGroup(g models.Groupable) GopherGroup {
 	}
 }
 
-func (group returnedGroup) AddMembers(c *msgraphsdk.GraphServiceClient, memberids []string) {
-	reference := membersAdd.NewRef()
-	for id := range memberids {
-		reference.GetAdditionalData()["@odata.id"] = "https://graph.microsoft.com/v1.0/directoryObjects/" + string(id)
-	}
+//func (group GopherGroup) AddMembers(c *msgraphsdk.GraphServiceClient, memberids []string) {
 
-	graphClient.GroupsById(&group).Members().Post(reference)
-}
+// Per https://github.com/microsoftgraph/msgraph-sdk-go/issues/155#issuecomment-1142048347
+// below is the correct way to implement a group add, however I've been unable to get it working
+// namely the 'Post' method is not available
+// waiting for a reply here https://github.com/microsoftgraph/msgraph-sdk-go/issues/197#issuecomment-1151696495
+
+// reference := membersAdd.NewRef()
+// for _, id := range memberids {
+// 	reference.GetAdditionalData()["@odata.id"] = "https://graph.microsoft.com/v1.0/directoryObjects/" + id
+// }
+
+// graphClient := c
+// r, err := graphClient.GroupsById(group.ObjectID).Members().Post(reference)
+// fmt.Println(r, err)
+
+// for now below is workaround
+// url := fmt.Sprintf("https://graph.microsoft.com/v1.0/groups/%v/members/$ref", group.ObjectID)
+// requestBuilder := groups.NewGroupsRequestBuilder(url, a)
+// objectToAdd := models.NewGroup()
+
+// for id := range memberids {
+// 	objectToAdd.GetAdditionalData()["@odata.id"] = "https://graph.microsoft.com/v1.0/directoryObjects/" + string(id)
+// }
+// res, err := requestBuilder.Post()
+//}
