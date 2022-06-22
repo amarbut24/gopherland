@@ -2,6 +2,7 @@ package gopherusers
 
 import (
 	"testing"
+	"time"
 
 	"github.com/amarbut24/gopherland/auth"
 	models "github.com/microsoftgraph/msgraph-sdk-go/models"
@@ -47,6 +48,9 @@ func TestNewUser(t *testing.T) {
 		t.Logf("created user %s\n", *newUser.GetUserPrincipalName())
 		testUser = newUser
 	}
+
+	// throw in a sleep as remaining test depend on the new user
+	time.Sleep(time.Second * 30)
 }
 
 func TestGetUserByID(t *testing.T) {

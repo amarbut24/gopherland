@@ -3,9 +3,10 @@ package main
 import (
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/amarbut24/gopherland/auth"
-	"github.com/amarbut24/gopherland/gophergroups"
+	"github.com/amarbut24/gopherland/gopherusers"
 )
 
 var envvars = make(map[string]string)
@@ -18,32 +19,32 @@ func main() {
 	auth.SetAzureEnv(envvars)
 
 	log.Printf("creating msgraph client")
-	client, adapter, err := auth.AzureGraphClient()
+	client, _, err := auth.AzureGraphClient()
 	if err != nil {
 		log.Fatalf("unable to create msgraph client with error: %v", err)
 	}
 
-	// g, _ := gophergroups.GetGroupByID(client, "46307819-3f04-46ef-bdfe-cd4891498454")
-	// fmt.Println(g)
+	users := []gopherusers.GopherUser{}
+	for i := 0; i < 10; i++ {
+		un := strconv.Itoa(i)
+		u1 := gopherusers.GopherUser{
+			FirstName:                     "Test",
+			LastName:                      "User" + un,
+			MailNickname:                  "testuser" + un,
+			UserPrincipalName:             fmt.Sprintf("testuser%v@gopherland.onmicrosoft.com", un),
+			ForceChangePasswordNextSignIn: true,
+			DisplayName:                   "Test User" + un,
+			AccountEnabled:                false,
+		}
+		users = append(users, u1)
+	}
 
-	// Create new user struct
-	// g1 := gophergroups.GopherGroup{
-	// 	DisplayName:     "Test Group",
-	// 	Description:     "Group created using Go",
-	// 	SecurityEnabled: true,
-	// 	MailNickname:    "testgroup",
-	// }
+	ch := make(chan gopherusers.ConcurrentResult)
+	gopherusers.CNewUsers(ch, users, client)
 
-	// // Create new group
-	// newGroup, err := g1.NewGroup(client)
-	// if err != nil {
-	// 	log.Print(err)
-	// } else {
-	// 	log.Printf("created group %s\n", *newGroup.GetDisplayName())
-	// }
-	g, _ := gophergroups.GetGroupByDisplayName(client, "Test Group")
-	fmt.Println("Return group via DisplayName", *g.GetId())
+	// ag, _ := gophergroups.GetAllGroups(client, adapter)
+	// fmt.Println("Found all groups", ag)
 
-	ag, _ := gophergroups.GetAllGroups(client, adapter)
-	fmt.Println("Found all groups", ag)
+	// g, _ := gophergroups.GetGroupByDisplayName(client, "Test Group")
+	// g.AddMembers(client, []string{"73e66338-4510-47a7-bfe7-25a2ae9d6024"})
 }

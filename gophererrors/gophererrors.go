@@ -12,3 +12,10 @@ func HandleODataErr(err error, context string) error {
 	m := *oderr.GetMessage()
 	return fmt.Errorf("%v\nCode=%v\nmessage=%v", context, c, m)
 }
+
+func GetODataDetails(err error) (string, string) {
+	oderr := err.(*msgraph_errors.ODataError).GetError()
+	c := *oderr.GetCode()
+	m := *oderr.GetMessage()
+	return c, m
+}

@@ -2,6 +2,7 @@ package gopherusers
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
 	"time"
 
@@ -21,6 +22,12 @@ type GopherUser struct {
 	DisplayName                   string
 	UserPrincipalName             string
 	MailNickname                  string
+}
+
+type ConcurrentResult struct {
+	Success    bool
+	ObjectName string
+	Error      error
 }
 
 // GetUserByID can used to return an Azure AD user via ObjectID
@@ -101,7 +108,7 @@ func (user GopherUser) NewUser(c *msgraphsdk.GraphServiceClient) (models.Userabl
 
 	foundUser, _ := GetUserByUPN(c, user.UserPrincipalName)
 	if foundUser != nil {
-		fmt.Printf("found user %v, skipping creation\n", user.UserPrincipalName)
+		log.Printf("found user %v, skipping creation\n", user.UserPrincipalName)
 		return nil, nil
 	}
 
@@ -118,10 +125,49 @@ func (user GopherUser) NewUser(c *msgraphsdk.GraphServiceClient) (models.Userabl
 
 	newUser, err := c.Users().Post(requestBody)
 	if err != nil {
-		odataerr := gophererrors.HandleODataErr(err, "error creating new user")
-		return nil, odataerr
+		_, m := gophererrors.GetODataDetails(err)
+		// this seems to be a bug with the SDK
+		// created an issue here https://github.com/microsoftgraph/msgraph-sdk-go/issues/203
+		if m == "Unable to read JSON request payload. Please ensure Content-Type header is set and payload is of valid JSON format." {
+			return user.NewUser(c)
+		} else {
+			odataerr := gophererrors.HandleODataErr(err, "error creating new user")
+			return nil, odataerr
+		}
 	}
+	log.Printf("created new user %v\n", user.UserPrincipalName)
 	return newUser, nil
+}
+
+// CNewUser adds channels to the NewUser
+// which can be used to create many users at once via CNewUsers
+func CNewUser(user GopherUser, c *msgraphsdk.GraphServiceClient, ch chan ConcurrentResult) {
+	_, err := user.NewUser(c)
+	if err != nil {
+		ch <- ConcurrentResult{false, user.UserPrincipalName, err}
+	}
+	ch <- ConcurrentResult{true, user.UserPrincipalName, nil}
+}
+
+// CNewUsers build on CNewUser
+// It takes a slice of users and creates seperate goroutines for each user
+func CNewUsers(ch chan ConcurrentResult, users []GopherUser, client *msgraphsdk.GraphServiceClient) {
+	for _, u := range users {
+		go CNewUser(u, client, ch)
+		//log.Printf("number of go routines %v", runtime.NumGoroutine())
+	}
+
+	f := []ConcurrentResult{}
+	for i := 0; i < len(users); i++ {
+		r := <-ch
+		if !r.Success {
+			log.Printf("failed to concurrently create %v", r.ObjectName)
+			f = append(f, r)
+		}
+	}
+	if len(f) > 0 {
+		fmt.Println("outputting failed user creations")
+	}
 }
 
 func newRandomPassword(length int) string {
