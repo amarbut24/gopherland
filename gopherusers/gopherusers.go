@@ -129,7 +129,8 @@ func (user GopherUser) NewUser(c *msgraphsdk.GraphServiceClient) (models.Userabl
 		// this seems to be a bug with the SDK
 		// created an issue here https://github.com/microsoftgraph/msgraph-sdk-go/issues/203
 		if m == "Unable to read JSON request payload. Please ensure Content-Type header is set and payload is of valid JSON format." {
-			return user.NewUser(c)
+			//return user.NewUser(c)
+			return nil, fmt.Errorf("call failed - password used was %v", password)
 		} else {
 			odataerr := gophererrors.HandleODataErr(err, "error creating new user")
 			return nil, odataerr
@@ -161,12 +162,12 @@ func CNewUsers(ch chan ConcurrentResult, users []GopherUser, client *msgraphsdk.
 	for i := 0; i < len(users); i++ {
 		r := <-ch
 		if !r.Success {
-			log.Printf("failed to concurrently create %v", r.ObjectName)
+			log.Printf("failed to concurrently create %v with err %v", r.ObjectName, r.Error)
 			f = append(f, r)
 		}
 	}
 	if len(f) > 0 {
-		fmt.Println("outputting failed user creations")
+		log.Printf("outputting failed user creations %v", f)
 	}
 }
 
@@ -184,9 +185,9 @@ func newRandomASCII() string {
 	i := 0
 	for {
 		i = rand.Intn(126-33) + 33
-		// we can't use '<' , '>', '"' as characters in a password
+		// we can't use '<' , '>', '"', "\" as characters in a password
 
-		if i != 62 && i != 60 && i != 34 {
+		if i != 62 && i != 60 && i != 34 && i != 92 {
 			break
 		}
 	}
