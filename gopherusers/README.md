@@ -6,7 +6,7 @@ u1 := gopherusers.GopherUser{
 		FirstName:                     "Anthony",
 		LastName:                      "Marbut",
 		MailNickname:                  "amarbut",
-		UserPrincipalName:             "amarbut@gopherland.onmicrosoft.com",
+		UserPrincipalName:             "amarbut@contoso.com",
 		ForceChangePasswordNextSignIn: true,
 		DisplayName:                   "Anthony Marbut",
 		AccountEnabled:                false,
