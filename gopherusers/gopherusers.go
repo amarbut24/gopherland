@@ -131,20 +131,19 @@ func (user GopherUser) NewUser(c *msgraphsdk.GraphServiceClient) (GopherUser, er
 		odataerr := gophererrors.HandleODataErr(err, "error creating new user")
 		return GopherUser{}, odataerr
 	}
-	log.Printf("created new user %v\n", user.UserPrincipalName)
+	log.Printf("created new user %v\n", newUser.GetUserPrincipalName())
 	return ConvertToGopherUser(newUser), nil
 }
 
 func ConvertToGopherUser(u models.Userable) GopherUser {
 	return GopherUser{
-		AccountEnabled:                *u.GetAccountEnabled(),
-		DisplayName:                   *u.GetDisplayName(),
-		FirstName:                     *u.GetPreferredName(),
-		ForceChangePasswordNextSignIn: *u.GetPasswordProfile().GetForceChangePasswordNextSignIn(),
-		LastName:                      *u.GetSurname(),
-		ObjectID:                      *u.GetId(),
-		MailNickname:                  *u.GetMailNickname(),
-		UserPrincipalName:             *u.GetUserPrincipalName(),
+		AccountEnabled:    *u.GetAccountEnabled(),
+		DisplayName:       *u.GetDisplayName(),
+		FirstName:         *u.GetPreferredName(),
+		LastName:          *u.GetSurname(),
+		ObjectID:          *u.GetId(),
+		MailNickname:      *u.GetMailNickname(),
+		UserPrincipalName: *u.GetUserPrincipalName(),
 	}
 }
 

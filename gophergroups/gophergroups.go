@@ -117,6 +117,8 @@ func GetAllGroups(c *msgraphsdk.GraphServiceClient, adapter *msgraphsdk.GraphReq
 	return allGroups, nil
 }
 
+// ConvertToGoperGroup converts the models.Groupable object
+// to a GopherGroup struct
 func ConvertToGopherGroup(g models.Groupable) GopherGroup {
 	return GopherGroup{
 		DisplayName:     *g.GetDisplayName(),
