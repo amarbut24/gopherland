@@ -39,8 +39,11 @@ func main() {
 		users = append(users, u1)
 	}
 
-	ch := make(chan gopherusers.ConcurrentResult)
-	gopherusers.CNewUsers(ch, users, client)
+	// ch := make(chan gopherusers.ConcurrentResult)
+	// gopherusers.CNewUsers(ch, users, client)
+
+	result, err := users[0].NewUser(client)
+	fmt.Println(result)
 
 	// ag, _ := gophergroups.GetAllGroups(client, adapter)
 	// fmt.Println("Found all groups", ag)

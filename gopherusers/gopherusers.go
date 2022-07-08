@@ -16,14 +16,17 @@ import (
 // GopherUser can be used to intilzae a new user
 type GopherUser struct {
 	AccountEnabled                bool
+	DisplayName                   string
 	FirstName                     string
 	ForceChangePasswordNextSignIn bool
 	LastName                      string
-	DisplayName                   string
-	UserPrincipalName             string
+	ObjectID                      string
 	MailNickname                  string
+	UserPrincipalName             string
 }
 
+// ConcurrentResult is struct used to store
+// concurrent result values
 type ConcurrentResult struct {
 	Success    bool
 	ObjectName string
@@ -31,17 +34,17 @@ type ConcurrentResult struct {
 }
 
 // GetUserByID can used to return an Azure AD user via ObjectID
-func GetUserByID(c *msgraphsdk.GraphServiceClient, uid string) (models.Userable, error) {
+func GetUserByID(c *msgraphsdk.GraphServiceClient, uid string) (GopherUser, error) {
 	user, err := c.UsersById(uid).Get()
 	if err != nil {
 		odataerr := gophererrors.HandleODataErr(err, "error finding user via objectid")
-		return nil, odataerr
+		return GopherUser{}, odataerr
 	}
-	return user, nil
+	return ConvertToGopherUser(user), nil
 }
 
 // GetUserByUPN can used to return an Azure AD user via UPN
-func GetUserByUPN(c *msgraphsdk.GraphServiceClient, upn string) (models.Userable, error) {
+func GetUserByUPN(c *msgraphsdk.GraphServiceClient, upn string) (GopherUser, error) {
 	filter := fmt.Sprintf("userPrincipalName eq '%s'", upn)
 	requestParameters := &users.UsersRequestBuilderGetQueryParameters{
 		Filter: &filter,
@@ -54,16 +57,16 @@ func GetUserByUPN(c *msgraphsdk.GraphServiceClient, upn string) (models.Userable
 	user, err := c.Users().GetWithRequestConfigurationAndResponseHandler(options, nil)
 	if err != nil {
 		odataerr := gophererrors.HandleODataErr(err, "error finding user via UserPrincipalName")
-		return nil, odataerr
+		return GopherUser{}, odataerr
 	}
 	if len(user.GetValue()) > 0 {
 		if len(user.GetValue()) > 1 {
-			return nil, fmt.Errorf("more than one value was returned when matching userPrincipalName %v, this should not happen", upn)
+			return GopherUser{}, fmt.Errorf("more than one value was returned when matching userPrincipalName %v, this should not happen", upn)
 		}
 
-		return user.GetValue()[0], nil
+		return ConvertToGopherUser(user.GetValue()[0]), nil
 	}
-	return nil, nil
+	return GopherUser{}, nil
 
 }
 
@@ -78,7 +81,7 @@ func DeleteUserByID(c *msgraphsdk.GraphServiceClient, uid string) error {
 }
 
 // GetAllUsers returns all Azure AD users
-func GetAllUsers(c *msgraphsdk.GraphServiceClient, adapter *msgraphsdk.GraphRequestAdapter) ([]models.Userable, error) {
+func GetAllUsers(c *msgraphsdk.GraphServiceClient, adapter *msgraphsdk.GraphRequestAdapter) ([]GopherUser, error) {
 	users, err := c.Users().Get()
 	if err != nil {
 		odataerr := gophererrors.HandleODataErr(err, "error retrieving all users")
@@ -90,9 +93,9 @@ func GetAllUsers(c *msgraphsdk.GraphServiceClient, adapter *msgraphsdk.GraphRequ
 		return nil, fmt.Errorf("unable to create new pageIterator: %v", err)
 	}
 
-	var allUsers []models.Userable
+	var allUsers []GopherUser
 	err = pageIterator.Iterate(func(pageItem interface{}) bool {
-		allUsers = append(allUsers, pageItem.(models.Userable))
+		allUsers = append(allUsers, ConvertToGopherUser(pageItem.(models.Userable)))
 		// Return true to continue the iteration
 		return true
 	})
@@ -104,12 +107,12 @@ func GetAllUsers(c *msgraphsdk.GraphServiceClient, adapter *msgraphsdk.GraphRequ
 }
 
 // NewUser allows you to create a new Azure AD user
-func (user GopherUser) NewUser(c *msgraphsdk.GraphServiceClient) (models.Userable, error) {
+func (user GopherUser) NewUser(c *msgraphsdk.GraphServiceClient) (GopherUser, error) {
 
 	foundUser, _ := GetUserByUPN(c, user.UserPrincipalName)
-	if foundUser != nil {
+	if foundUser.UserPrincipalName != "" {
 		log.Printf("found user %v, skipping creation\n", user.UserPrincipalName)
-		return nil, nil
+		return GopherUser{}, nil
 	}
 
 	password := newRandomPassword(18)
@@ -125,20 +128,52 @@ func (user GopherUser) NewUser(c *msgraphsdk.GraphServiceClient) (models.Userabl
 
 	newUser, err := c.Users().Post(requestBody)
 	if err != nil {
-		_, m := gophererrors.GetODataDetails(err)
-		// this seems to be a bug with the SDK
-		// created an issue here https://github.com/microsoftgraph/msgraph-sdk-go/issues/203
-		if m == "Unable to read JSON request payload. Please ensure Content-Type header is set and payload is of valid JSON format." {
-			//return user.NewUser(c)
-			return nil, fmt.Errorf("call failed - password used was %v", password)
-		} else {
-			odataerr := gophererrors.HandleODataErr(err, "error creating new user")
-			return nil, odataerr
-		}
+		odataerr := gophererrors.HandleODataErr(err, "error creating new user")
+		return GopherUser{}, odataerr
 	}
 	log.Printf("created new user %v\n", user.UserPrincipalName)
-	return newUser, nil
+	return ConvertToGopherUser(newUser), nil
 }
+
+func ConvertToGopherUser(u models.Userable) GopherUser {
+	return GopherUser{
+		AccountEnabled:                *u.GetAccountEnabled(),
+		DisplayName:                   *u.GetDisplayName(),
+		FirstName:                     *u.GetPreferredName(),
+		ForceChangePasswordNextSignIn: *u.GetPasswordProfile().GetForceChangePasswordNextSignIn(),
+		LastName:                      *u.GetSurname(),
+		ObjectID:                      *u.GetId(),
+		MailNickname:                  *u.GetMailNickname(),
+		UserPrincipalName:             *u.GetUserPrincipalName(),
+	}
+}
+
+func newRandomPassword(length int) string {
+	var password string
+
+	for i := 0; i != length; i++ {
+		password += newRandomASCII()
+	}
+	return password
+}
+
+func newRandomASCII() string {
+	rand.Seed(time.Now().UTC().UnixNano())
+	i := 0
+	for {
+		i = rand.Intn(126-33) + 33
+
+		// we can't use '<' , '>', '"', '\' as characters in a password
+		if i != 62 && i != 60 && i != 34 {
+			break
+		}
+	}
+	return fmt.Sprintf("%c", i)
+}
+
+/*
+CONCURRENCY FUNCTIONS
+*/
 
 // CNewUser adds channels to the NewUser
 // which can be used to create many users at once via CNewUsers
@@ -169,27 +204,4 @@ func CNewUsers(ch chan ConcurrentResult, users []GopherUser, client *msgraphsdk.
 	if len(f) > 0 {
 		log.Printf("outputting failed user creations %v", f)
 	}
-}
-
-func newRandomPassword(length int) string {
-	var password string
-
-	for i := 0; i != length; i++ {
-		password += newRandomASCII()
-	}
-	return password
-}
-
-func newRandomASCII() string {
-	rand.Seed(time.Now().UTC().UnixNano())
-	i := 0
-	for {
-		i = rand.Intn(126-33) + 33
-		// we can't use '<' , '>', '"', "\" as characters in a password
-
-		if i != 62 && i != 60 && i != 34 && i != 92 {
-			break
-		}
-	}
-	return fmt.Sprintf("%c", i)
 }

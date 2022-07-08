@@ -3,12 +3,12 @@
 # Create new user
 ```
 u1 := gopherusers.GopherUser{
-		FirstName:                     "Anthony",
-		LastName:                      "Marbut",
-		MailNickname:                  "amarbut",
-		UserPrincipalName:             "amarbut@gopherland.onmicrosoft.com",
+		FirstName:                     "John",
+		LastName:                      "Doe",
+		MailNickname:                  "jdoe",
+		UserPrincipalName:             "jdoe@contoso.com",
 		ForceChangePasswordNextSignIn: true,
-		DisplayName:                   "Anthony Marbut",
+		DisplayName:                   "John Doe",
 		AccountEnabled:                false,
 }
 
@@ -16,32 +16,30 @@ u1 := gopherusers.GopherUser{
 newUser, err := u1.NewUser(client)
 if err != nil {
 	log.Print(err)
-} else if newUser == nil {
-	log.Printf("existing user %v was found when attempting to create new user", u1.UserPrincipalName)
 } else {
-	log.Printf("created user %s\n", *newUser.GetUserPrincipalName())
+	log.Printf("created user %s\n", newUser.UserPrincipalName)
 }
 
 ```
 # Get user by Object ID
 
 ```
-byID, err := gopherusers.GetUserByID(client, *newUser.GetId())
+byID, err := gopherusers.GetUserByID(client, newUser.ObjectID)
 if err != nil {
 	log.Fatalf("unable to locate user: %v", err)
 }
-log.Println("found user based on Id =", *byID.GetId())
+log.Println("found user based on Id =", byID.ObjectID)
 
 ```
 
 # Get user by UserPrincipalName
 
 ```go
-byUPN, err := gopherusers.GetUserByUPN(client, *newUser.GetUserPrincipalName())
+byUPN, err := gopherusers.GetUserByUPN(client, newUser.UserPrincipalName)
 if err != nil {
 	log.Fatalf("unable to locate user: %v", err)
 }
-log.Println("found user based on UPN =", *byUPN.GetUserPrincipalName())
+log.Println("found user based on UPN =", byUPN.UserPrincipalName)
 
 ```
 
@@ -60,11 +58,11 @@ fmt.Printf("Found %v users", len(allUsers))
 
 ```go
 
-err = gopherusers.DeleteUserByID(client, *byUPN.GetId())
+err = gopherusers.DeleteUserByID(client, byUPN.ObjectID)
 if err != nil {
 	log.Fatalf("unable to locate user: %v", err)
 } else {
-	log.Printf("user %v was deleted\n", *byUPN.GetDisplayName())
+	log.Printf("user %v was deleted\n", byUPN.DisplayName)
 }
 
 ```
@@ -98,52 +96,43 @@ func main() {
 
 	// Create new user struct
 	u1 := gopherusers.GopherUser{
-		FirstName:                     "Anthony",
-		LastName:                      "Marbut",
-		MailNickname:                  "amarbut",
-		UserPrincipalName:             "amarbut@gopherland.onmicrosoft.com",
+		FirstName:                     "John",
+		LastName:                      "Doe",
+		MailNickname:                  "jdoe",
+		UserPrincipalName:             "jdoe@contoso.com",
 		ForceChangePasswordNextSignIn: true,
-		DisplayName:                   "Anthony Marbut",
+		DisplayName:                   "John Doe",
 		AccountEnabled:                false,
-	}
+    }
 
 	// Create new user
 	newUser, err := u1.NewUser(client)
 	if err != nil {
 		log.Print(err)
-	} else if newUser == nil {
-		log.Printf("existing user %v was found when attempting to create new user", u1.UserPrincipalName)
 	} else {
-		log.Printf("created user %s\n", *newUser.GetUserPrincipalName())
+		log.Printf("created user %s\n", newUser.UserPrincipalName)
 	}
 
 	// Find the user by objectID
-	byId, err := gopherusers.GetUserByID(client, *newUser.GetId())
+	byId, err := gopherusers.GetUserByID(client, newUser.ObjectID)
 	if err != nil {
 		log.Fatalf("unable to locate user: %v", err)
 	}
-	log.Println("found user based on Id =", *byId.GetId())
+	log.Println("found user based on Id =", byId.ObjectID)
 
 	// Find the user by UserPrincipalName
-	byUPN, err := gopherusers.GetUserByUPN(client, *newUser.GetUserPrincipalName())
+	byUPN, err := gopherusers.GetUserByUPN(client, newUser.UserPrincipalName)
 	if err != nil {
 		log.Fatalf("unable to locate user: %v", err)
 	}
-	log.Println("found user based on UPN =", *byUPN.GetUserPrincipalName())
-
-	// Enable account
-	d := *byUPN.GetDisplayName()
-	log.Printf("our new user %v is disabled by default, lets enable\n", d)
-	b := true
-	byUPN.SetAccountEnabled(&b)
-	log.Printf("account enabled status = %v\n", *byUPN.GetAccountEnabled())
+	log.Println("found user based on UPN =", byUPN.UserPrincipalName)
 
 	// Now lets delete the account
-	err = gopherusers.DeleteUserByID(client, *byUPN.GetId())
+	err = gopherusers.DeleteUserByID(client, byUPN.ObjectID)
 	if err != nil {
 		log.Fatalf("unable to locate user: %v", err)
 	} else {
-		log.Printf("user %v was deleted\n", *byUPN.GetDisplayName())
+		log.Printf("user %v was deleted\n", byUPN.DisplayName)
 	}
 }
 

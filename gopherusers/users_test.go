@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/amarbut24/gopherland/auth"
-	models "github.com/microsoftgraph/msgraph-sdk-go/models"
 )
 
 //Uncomment below block if you need to run test locally
@@ -21,7 +20,7 @@ func init() {
 
 //testUser will be populated vai TestNewUser
 //and will be used throughout the remaining tests
-var testUser models.Userable
+var testUser GopherUser
 
 func TestNewUser(t *testing.T) {
 	u1 := GopherUser{
@@ -42,10 +41,8 @@ func TestNewUser(t *testing.T) {
 	newUser, err := u1.NewUser(client)
 	if err != nil {
 		t.Fatalf("got err %v, wanted no errors", err)
-	} else if newUser == nil {
-		t.Logf("existing user %v was found when attempting to create new user", u1.UserPrincipalName)
 	} else {
-		t.Logf("created user %s\n", *newUser.GetUserPrincipalName())
+		t.Logf("created user %s\n", newUser.DisplayName)
 		testUser = newUser
 	}
 
@@ -59,11 +56,11 @@ func TestGetUserByID(t *testing.T) {
 		t.Errorf("unable to authenticate to azure ad %v", err)
 	}
 
-	byID, err := GetUserByID(client, *testUser.GetId())
+	byID, err := GetUserByID(client, testUser.ObjectID)
 	if err != nil {
 		t.Errorf("unable to locate user: %v", err)
 	}
-	t.Logf("found user based on Id = %v", *byID.GetId())
+	t.Logf("found user based on Id = %v", byID.ObjectID)
 }
 
 func TestGetUserByUPN(t *testing.T) {
@@ -72,11 +69,11 @@ func TestGetUserByUPN(t *testing.T) {
 		t.Errorf("unable to authenticate to azure ad %v", err)
 	}
 
-	byUPN, err := GetUserByID(client, *testUser.GetUserPrincipalName())
+	byUPN, err := GetUserByID(client, testUser.UserPrincipalName)
 	if err != nil {
 		t.Errorf("unable to locate user: %v", err)
 	}
-	t.Logf("found user based on UPN = %v", *byUPN.GetUserPrincipalName())
+	t.Logf("found user based on UPN = %v", byUPN.UserPrincipalName)
 }
 
 func TestDeleteUserByID(t *testing.T) {
@@ -85,11 +82,11 @@ func TestDeleteUserByID(t *testing.T) {
 		t.Errorf("unable to authenticate to azure ad %v", err)
 	}
 
-	err = DeleteUserByID(client, *testUser.GetId())
+	err = DeleteUserByID(client, testUser.ObjectID)
 	if err != nil {
 		t.Errorf("unable to locate user: %v", err)
 	}
-	t.Logf("user %v was deleted\n", *testUser.GetDisplayName())
+	t.Logf("user %v was deleted\n", testUser.DisplayName)
 }
 
 func TestGetAllUsers(t *testing.T) {
