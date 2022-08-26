@@ -10,6 +10,7 @@ import (
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 )
 
+// GopherGroup struct
 type GopherGroup struct {
 	DisplayName     string
 	Description     string

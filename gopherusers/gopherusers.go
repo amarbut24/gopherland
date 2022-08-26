@@ -131,20 +131,54 @@ func (user GopherUser) NewUser(c *msgraphsdk.GraphServiceClient) (GopherUser, er
 		odataerr := gophererrors.HandleODataErr(err, "error creating new user")
 		return GopherUser{}, odataerr
 	}
-	log.Printf("created new user %v\n", newUser.GetUserPrincipalName())
+	log.Printf("created new user %v\n", *newUser.GetUserPrincipalName())
 	return ConvertToGopherUser(newUser), nil
 }
 
 func ConvertToGopherUser(u models.Userable) GopherUser {
-	return GopherUser{
-		AccountEnabled:    *u.GetAccountEnabled(),
-		DisplayName:       *u.GetDisplayName(),
-		FirstName:         *u.GetPreferredName(),
-		LastName:          *u.GetSurname(),
-		ObjectID:          *u.GetId(),
-		MailNickname:      *u.GetMailNickname(),
-		UserPrincipalName: *u.GetUserPrincipalName(),
+	g := GopherUser{}
+	// AccountEnabled: u.GetAccountEnabled(),
+	// DisplayName:    *u.GetDisplayName(),
+	// FirstName:         *u.GetPreferredName(),
+	// LastName:          *u.GetSurname(),
+	// ObjectID:          *u.GetId(),
+	// MailNickname:      *u.GetMailNickname(),
+	// UserPrincipalName: *u.GetUserPrincipalName(),
+	accountenabled := u.GetAccountEnabled()
+	if accountenabled != nil {
+		g.AccountEnabled = *accountenabled
 	}
+
+	displayname := u.GetDisplayName()
+	if displayname != nil {
+		g.DisplayName = *displayname
+	}
+
+	fn := u.GetPreferredName()
+	if fn != nil {
+		g.FirstName = *fn
+	}
+
+	ln := u.GetSurname()
+	if ln != nil {
+		g.LastName = *ln
+	}
+
+	obj := u.GetId()
+	if obj != nil {
+		g.ObjectID = *obj
+	}
+
+	mail := u.GetMailNickname()
+	if mail != nil {
+		g.MailNickname = *mail
+	}
+
+	upn := u.GetUserPrincipalName()
+	if upn != nil {
+		g.UserPrincipalName = *upn
+	}
+	return g
 }
 
 func newRandomPassword(length int) string {
